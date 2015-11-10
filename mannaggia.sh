@@ -1,4 +1,5 @@
 #!/bin/sh
+# Needs coreutils (brew install voreutils)
 ############################################################
 # Mannaggiatore automatico per VUA depressi
 # idea originale by Alexiobash dallo script incazzatore.sh
@@ -24,21 +25,25 @@ pot=-1
 ndsflag=false
 wallflag=false
 DELSTRING1="</FONT>"
+DELSTRING1="</FONT"
 DELSTRING2="</b>"
+DELSTRING2="</b"
 PLAYER="mplayer -really-quiet -ao alsa"
-
+PLAYER="say"
+VOICE="Alice"
+RANDOMCHAR="$(base64 /dev/urandom | tr -d '/+'|tr -dc 'A-Z' | fold -w 1 | head -n 1)"
 # lettura parametri da riga comando
 for parm in "$@"
 	do
 	# leggi dai parametri se c'e' l'audio
 	if [ "$parm" = "--audio" ]
-		then 
+		then
 		audioflag=true
 	fi
 
 	# leggi dai parametri se c'e' da mandare i commenti su wall
 	if [ "$parm" = "--wall" ]
-		then 
+		then
 		wallflag=true
 	fi
 
@@ -82,9 +87,13 @@ done
 while [ "$nds" != 0 ]
 	do
 	# shellcheck disable=SC2019
-	MANNAGGIA="Mannaggia $(curl -s "www.santiebeati.it/$(</dev/urandom tr -dc A-Z|head -c1)/"|grep tit|cut -d'>' -f 4-9|shuf -n1 |awk -F "$DELSTRING1" '{print$1$2}'|awk -F "$DELSTRING2" '{print$1}')"
+#	MANNAGGIA="Mannaggia $(curl -s "www.santiebeati.it/$(</dev/urandom tr -dc A-Z|head -c1)/"|grep tit|cut -d'>' -f 4-9|shuf -n1 |awk -F "$DELSTRING1" '{print$1$2}'|awk -F "$DELSTRING2" '{print$1}')"
+	#MANNAGGIA="Mannaggia $(curl -s "www.santiebeati.it/${RANDOMCHAR}/"|grep tit|cut -d'>' -f 4-9|gshuf -n1 |awk -F "$DELSTRING1" '{print$1$2}'|awk -F "$DELSTRING2" '{print$1}')"
+	MANNAGGIA="Mannaggia $(curl -s "www.santiebeati.it/${RANDOMCHAR}/"|grep tit|awk -F'>' '{print $4" "$5" "$6" "$7" "$8" "$8}'|gshuf -n1 |awk -F "$DELSTRING1" '{print$1$2}'|awk -F "$DELSTRING2" '{print$1}')"
+	#MANNAGGIA2="Mannaggia $(curl -s "www.santiebeati.it/${RANDOMCHAR}/"|grep tit)"
+	#echo $MANNAGGIA2
 	MANNAGGIAURL="http://translate.google.com/translate_tts?tl=it&q=$MANNAGGIA"
-	
+
 	if [ "$wallflag" = true ]
 		then
 		pot=$(( nds % 50 ))
@@ -101,7 +110,11 @@ while [ "$nds" != 0 ]
 
 	if [ "$audioflag" = true ]
 		then
-		$PLAYER "$MANNAGGIAURL" 2>/dev/null
+		if [ "$PLAYER" == "say" ]; then
+			say -v "$VOICE" $MANNAGGIA
+		else
+			$PLAYER "$MANNAGGIAURL" 2>/dev/null
+		fi
 	fi
 
 	sleep "$spm"
